@@ -1,0 +1,22 @@
+{
+    "name": "fkw/membership",
+    "description": "Composer dependencies for WordPress plugin FKW Membership",
+    "type": "project",
+    "require": {
+        "vlucas/phpdotenv": "^5.5"
+    },
+    "require-dev": {
+        "vlucas/phpdotenv": "^5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Finarina\\Membership\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Christina Gleason",
+            "email": "christina@finarina.com"
+        }
+    ]
+}

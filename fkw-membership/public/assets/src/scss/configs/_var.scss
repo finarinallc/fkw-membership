@@ -1,0 +1,86 @@
+// Breakpoints
+$break-xsmall: 320px;
+$break-small: 480px;
+$break-medium: 768px;
+$break-large: 960px;
+$break-xlarge: 1200px;
+
+// CSS Variables
+:root {
+	// default colors
+	--finarina--color--default-white: #fff;
+	--finarina--color--default-white-off: #eff1f3;
+	--finarina--color--default-black: #000;
+	--finarina--color--default-black-off: #272727;
+	--finarina--color--default-gray: #696773;
+	--finarina--color--default-red: #B31414;
+	--finarina--color--default-red-light: #F0C2C2;
+	--finarina--color--default-red-dark: #450909;
+	--finarina--color--default-green: #56E65E;
+	--finarina--color--default-green-light: #C2F0C4;
+	--finarina--color--default-green-dark: #3A783E;
+	--finarina--color--default-purple: #7F30D8;
+	--finarina--color--default-purple-light: #C5A5EB;
+	--finarina--color--default-purple-dark: #2E0A56;
+	--finarina--color--default-blue: #3044d8;
+	--finarina--color--default-blue-light: #d7dbfc;
+	--finarina--color--default-blue-dark: #0f1652;
+	// opacity at 20%
+	--finarina--color--default-white-op: rgba(255, 255, 255, 0.2);
+	--finarina--color--default-black-op: rgba(0, 0, 0, 0.2);
+	// opacity at 80%
+	--finarina--color--default-white-op-dark: rgba(255, 255, 255, 0.8);
+	--finarina--color--default-black-op-dark: rgba(0, 0, 0, 0.8);
+
+	// basic styles
+	// forms 
+	--finarina--form-error--text-color: var(--finarina--color--default-red-dark);
+	--finarina--form-error--bg-color: var(--finarina--color--default-red-light);
+	--finarina--form-ok--color: var(--finarina--color--default-green-light);
+	// body
+	--finarina--text-color--body: var(--finarina--color--default-black-off);
+	// links
+	--finarina--link-text-color: var(--finarina--color--default-blue);
+	--finarina--link-text-color-hover: var(--finarina--color--default-blue-light);
+	--finarina--link-text-color-active: var(--finarina--color--default-red);
+	--finarina--link-text-color-visited: var(--finarina--color--default-purple);
+	// buttons
+	--finarina--button-bg-color: var(--finarina--color--default-blue);
+	--finarina--button-bg-color-hover: var(--finarina--color--default-blue-light);
+	--finarina--button-bg-color-active: var(--finarina--color--default-red); 
+	--finarina--button-bg-color-visited: var(--finarina--color--default-purple);
+	--finarina--button-text-color: var(--finarina--color--default-white);
+	--finarina--button-text-color-hover: var(--finarina--color--default-blue);
+	// blockquote
+	--finarina--blockquote-border-color: var(--finarina--color--default-blue);
+	--finarina--blockquote-text-color: var(--finarina--color--gray);
+	// default font families
+	--finarina--body-font: Tahoma, sans-serif;
+	--finarina--heading-font: Georgia, serif;
+	--finarina--decorative-font: 'Times New Roman', serif;
+	// default font sizing
+	--finarina--default-font-size: 1rem;
+	--finarina--body-font-size: var(--finarina--default-font-size);
+	--finarina--h1-font-size: 1.5rem;
+	--finarina--h2-font-size: 1.4rem;
+	--finarina--h3-font-size: 1.3rem;
+	--finarina--h4-font-size: 1.25rem;
+	--finarina--h5-font-size: 1.2rem;
+	--finarina--h6-font-size: 1.1rem;
+	// default font spacing
+	--finarina--default-letter-spacing: .1rem;
+	--finarina--default-line-height: 1.2rem;
+	--finarina--body-letter-spacing: var(--finarina--default-letter-spacing);
+	--finarina--body-line-height: normal; 
+	--finarina--heading-letter-spacing: .05rem;
+	--finarina--heading-line-height: 1.1rem;
+	// default spacing
+	--finarina--padding-topbottom-size: 1rem;
+	--finarina--padding-rightleft: 1.1rem;
+	--finarina--margin-center-size: 0 auto;
+	// default borders
+	--finarina--border-size: 3px;
+	--finarina--border-radius: 3px;
+	--finarina--border-color: var(--finarina--color--default-blue);
+	--finarina--border-type: solid;
+}

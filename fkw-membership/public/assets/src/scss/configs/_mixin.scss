@@ -1,0 +1,38 @@
+@mixin bp($point) {
+	@if $point == smallmobile {
+		@media (min-width: $break-xsmall) { @content; }
+	}
+	@else if $point == mobile {
+		@media (min-width: $break-small) { @content; }
+	}
+	@else if $point == tablet {
+		@media (min-width: $break-medium) { @content; }
+	}
+	@else if $point == desktop {
+		@media (min-width: $break-large) { @content; }
+	}
+	@else if $point == largedesktop {
+		@media (min-width: $break-xlarge) { @content; }
+	}
+	@else if unit($point) == 'px' {
+		@media (min-width: $point) { @content; }
+	}
+	@else {
+		@warn "Make sure you are using the correct variables defined in bp mixin - smallmobile, mobile, tablet, desktop, largedesktop, or a number defined in pixels";
+	}
+}
+
+@mixin columns($number, $gap) {
+	column-count: $number;
+	column-gap: $gap;
+}
+
+@mixin fade() {
+	transition: all .2s ease;
+}
+
+@mixin container() {
+	margin: 0 auto;
+	max-width: $break-xlarge;
+		width: 100%;
+}

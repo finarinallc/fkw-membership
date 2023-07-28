@@ -1,0 +1,77 @@
+@charset"utf-8";
+
+// Variables
+@import 'configs/var';
+
+// Mixins
+@import 'configs/mixin';
+
+.fkw-membership-settings-form {
+    padding: var(--finarina--padding-topbottom-size) var(--finarina--padding-rightleft);
+
+    /* Modal styles */
+    .modal {
+        display: none; /* Hide the modal by default */
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    }
+
+        /* Modal content styles */
+    .modal-content {
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        position: relative;
+    }
+
+        /* Close button styles */
+    .close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .form-table {
+        width: 100%;
+
+        @include bp(largedesktop) {
+            width: 60%;
+        }
+
+        td {
+            .description {
+                display: block;
+                font-size: 16px;
+                padding: 0 0 12px;
+            }
+
+            .fields-group {
+                border-bottom: 1px solid #ccc;
+                margin: 0 0 20px;
+                padding: 0 0 20px;
+
+                &:last-child {
+                    border: 0;
+                }
+
+                label {
+                    display: block;
+                    padding: 0 0 10px;
+
+                    @import 'defaults/formfields';
+                }
+            }
+        }
+    }
+}

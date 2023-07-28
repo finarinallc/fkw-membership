@@ -1,0 +1,61 @@
+input[type="submit"] {
+    background: var(--finarina--button-bg-color);
+    border: 0;
+    border-radius: var(--finarina--border-radius);
+    color: var(--finarina--color--default-white);
+    cursor: pointer;
+    font-family: var(--finarina--heading-font);
+    font-size: 1.2rem;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: 1px;
+    margin: 0;
+    max-width: 320px;
+    padding: 0.5rem 0.75rem;
+    text-align: center;
+    text-transform: capitalize;
+    width: 100%;
+
+    &:hover {
+        background: var(--finarina--button-bg-color-hover);
+        color: var(--finarina--color--default-black);
+        @include fade();
+    }
+}
+
+input, select, textarea {
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 400;
+    padding: 0.5rem 0.75rem;
+    width: 100%;
+
+    @include bp(desktop) {
+        padding: 0.8rem 0.75rem;
+    }
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="url"] {
+    margin: 10px 0;
+    outline: none;
+}
+
+textarea {
+    height: 6rem;
+    resize: vertical;
+}
+
+select {
+    text-indent: 0.01px;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    margin: 0 .5rem 0 0;
+    height: 1rem;
+    transform: scale(1.25);
+    width: 1rem;
+}
