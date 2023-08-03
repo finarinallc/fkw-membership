@@ -44,7 +44,7 @@ class Points {
     
         // Code to handle form submissions for adding/editing/deleting points intervals
         if ( isset( $_POST['action'] ) ) {
-            $this->points_form_submitted( $_POST, $levels );
+            $this->handle_form_submitted( $_POST, $levels );
         }
     
         // Check if any levels have been created before showing the points page

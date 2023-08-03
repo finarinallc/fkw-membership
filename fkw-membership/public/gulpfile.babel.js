@@ -47,22 +47,14 @@ export const images = () => {
 
 export const scripts = () => {
 	return src(['assets/src/js/*.js'])
-		.pipe(concat('temp.js')) // Concatenate all JS files into a temporary file
 		.pipe(minify({
 			ext: {
-				min: '.js'
+				min: '.min.js'
 			},
 			noSource: true
 		}))
-		.pipe(rename((path) => {
-			if (path.basename.includes('admin')) {
-				path.basename = 'admin.min';
-			} else {
-				path.basename = 'main.min';
-			}
-		}))
 		.pipe(dest('assets/dist/js'));
-  };
+};
 
 // continually run the compiling scripts while files are saved/changed/added
 export const watchForChanges = () => {
