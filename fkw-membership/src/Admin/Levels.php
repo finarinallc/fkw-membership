@@ -1,30 +1,109 @@
 <?php
-namespace Finarina\Membership\Admin;
+namespace FKW\Membership\Admin;
+
+use FKW\Membership\FKWMembership;
+use FKW\Membership\Admin;
+use FKW\Membership\Admin\SettingsPage;
 
 class Levels {
 
     /**
-     * Constructor for the class.
+     * The single instance of the class.
      *
-     * Hooks into WordPress admin menu to add the custom top-level menu link.
-     * Hooks into the custom top-level menu page to handle form submissions.
-     * Enqueues CSS stylesheet for the admin pages.
+     * @var Levels|null
      */
-    public function __construct() {
-        // Hook into WordPress admin menu to add the custom top-level menu link.
-        add_action( 'admin_menu', array( $this, 'add_points_subpage_menu' ) );
+    private static $instance = null;
+
+    /**
+     * FKWMembership Admin settings id
+     */
+    public $settings_id;
+
+    /**
+     * Unique module name
+     */
+    public $module_name;
+
+	/**
+	 * Settings ID to associate fields with database
+	 */
+	public $module_settings_id;
+
+    /**
+     * Settings database ID to associate fields with
+     */
+    public $module_settings_database_id;
+
+	/**
+	 * Settings page ID to associate fields with specific page
+	 */
+	public $module_settings_subpage_id;
+
+	/**
+	 * General settings object to create page fields
+	 */
+	public $module_settings_subpage;
+
+    /**
+     * Get the single instance of the class.
+     *
+     * @return Levels|null
+     */
+    public static function get_instance() {
+        if ( null === self::$instance ) {
+            self::$instance = new self();
+        }
+
+        return self::$instance;
     }
 
-    public function add_points_subpage_menu() {
-        // Add a submenu page for managing membership levels.
+	/**
+	 * Constructor for the class.
+	 *
+	 * Initializes the class and sets up the necessary properties.
+	 *
+	 * @return void
+	 */
+    public function __construct() {
+
+        $fkwmembership = FKWMembership::get_instance();
+
+        $fkwmembership_admin = Admin::get_instance();
+        $this->settings_id = $fkwmembership_admin->settings_id;
+
+        $this->module_name = 'Levels';
+		$this->module_settings_id = $this->settings_id . '_levels';
+        $this->module_settings_database_id = $fkwmembership->plugin_namespace . '_levels';
+		$this->module_settings_subpage_id = $this->module_settings_database_id . '_page';
+
+    }
+
+    /**
+     * Initializes the admin page functionality.
+     *
+     * @return void
+     */
+    public function init() {
+        // Hook into WordPress admin menu to add the custom top-level menu link.
+        add_action( 'admin_menu', [ $this, 'add_subpage_menu' ] );
+    }
+
+    /**
+     * Adds a subpage menu to the parent page.
+     *
+     * @return void
+     */
+    public function add_subpage_menu() {
+
         add_submenu_page(
-            'fkwmembership',    // Parent menu slug
-            'Levels Settings',    // Page title
-            'Levels',    // Menu title
-            'manage_options',   // Capability required to access the submenu page
-            'fkwmembership_levels', // Submenu slug
-            array( $this, 'render_membership_settings_levels_page' ) // Callback function to render the submenu page (same as the top-level menu page)
+            $this->settings_id,
+            $this->module_name . ' Settings',
+            $this->module_name,
+            'manage_options',
+            $this->module_settings_id,
+            [ $this, 'render_settings_subpage' ]
         );
+
     }
 
     /**
@@ -33,174 +112,138 @@ class Levels {
      * @throws None
      * @return None
      */
-    public function render_membership_settings_levels_page() {
+    public function render_settings_subpage() {
         // Check if the user has the capability to access the page.
         if (!current_user_can('manage_options')) {
             wp_die(__('You do not have permission to access this page.'));
         }
 
-        // Get the saved levels from the database
-        $levels = get_option('fkwmembership_levels_available', array());
-
         // Code to handle form submissions for adding/editing/deleting levels
-        if ( isset( $_POST['action'] ) ) {
-            $this->handle_form_submitted( $_POST, $levels );
-        }
+        $levels = $this->check_current_form_submission( $_POST );
 
-        $access_options = get_option( 'fkwmembership_general_access_settings', array() );
+        $settings_general = get_option( 'fkwmembership_settings_general', [] );
         ?>
 
-        <div class="wrap fkw-membership-settings-form">
+        <div class="wrap fkwmembership-form-fields">
             <h1>FKW Membership Levels Settings</h1>
 
-            <?php if( empty( $access_options ) ) { ?>
-
+            <?php if( !empty( $settings_general ) ) {
+                if( empty( $settings_general['access_settings'] ) ) {
+            ?>
             <p>There are no access options set. Please go back to the Settings page to activate access options before you can make membership levels.</p>
+            <?php } else {
+                $access_options = $settings_general['access_settings'];
 
-            <?php } else { ?>
-
-            <!-- Add Level button -->
-            <?php echo get_submit_button('Add Level', 'secondary', 'add-level-btn'); ?>
-
-            <!-- Modal for adding a new level -->
-            <div id="add-level-modal" class="modal">
-                <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <h2>Add Level</h2>
-                    <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-                        <input type="hidden" name="action" value="add_level">
-                        <table class="form-table">
-                            <tr valign="top">
-                                <th scope="row">Add a new membership level</th>
-                                <td>
-                                    <div class="fields-group">
-                                        <label for="level_name">Level Name:</label>
-                                        <input type="text" name="level_name" id="level_name" class="form-control" required>
-                                    </div>
-                                    <div class="fields-group">
-                                        <label for="level_access">Level Access:</label>
-                                        <select name="level_access[]" id="level_access" class="form-control" multiple required>
-                                            <?php foreach( $access_options as $option ) { ?>
-                                            <option value="<?php echo strtolower( str_replace( ' ', '_', $option ) ); ?>', $option; ?>"><?php echo $option; ?></option>
-                                            <?php } ?>
-                                        </select>
-                                    </div>
-                                    <div class="fields-group">
-                                        <?php wp_nonce_field( 'save_member_level', 'save_member_level_nonce' ); ?>
-                                        <input type="submit" class="button-primary" value="Save Level">
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </form>
-                </div>
-            </div>
-
-            <?php if ( !empty( $levels ) ) { ?>
-            <!-- Display levels table -->
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th>Level Name</th>
-                        <th>Level Access</th>
-                        <th>Level Created</th>
-                        <th>Level Modified</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($levels as $level) { ?>
-                        <tr>
-                            <td><?php echo $level['name']; ?></td>
-                            <td>
-                                <?php
-                                // Display the access options for the level
-                                $access_settings = array(
-                                    'exclusive_content' => 'Enable Exclusive Content Access',
-                                    'early_access' => 'Enable Early Access to Content',
-                                    'live_chat_access' => 'Enable Live Chat Access',
-                                    'event_access' => 'Enable Event Access',
-                                    'discount_code_access' => 'Enable Discount Code Access',
-                                );
-
-                                $access_options = array();
-                                foreach ($access_settings as $key => $label) {
-                                    if (in_array($key, $level['access'])) {
-                                        $access_options[] = $label;
-                                    }
-                                }
-
-                                echo implode(', ', $access_options);
-                                ?>
-                            </td>
-                            <td><?php echo $level['created']; ?></td>
-                            <td><?php echo $level['modified']; ?></td>
-                        </tr>
-                    <?php } ?>
-                </tbody>
-            </table>
-            <?php } else { ?>
-                <p>No levels created yet.</p>
-            <?php }
-            } ?>
-        </div>
-
-        <script>
-            // JavaScript to handle the modal functionality
-            var addLevelModal = document.getElementById('add-level-modal');
-            var addLevelBtn = document.getElementById('add-level-btn');
-            var closeBtn = document.getElementsByClassName('close')[0];
-
-            addLevelBtn.onclick = function () {
-                addLevelModal.style.display = 'block';
+                require_once FKWMEMBERSHIP_PLUGIN_BASENAME . 'partials/admin/settings-levels-page.php';
             }
-
-            closeBtn.onclick = function () {
-                addLevelModal.style.display = 'none';
-            }
-
-            window.onclick = function (event) {
-                if (event.target === addLevelModal) {
-                    addLevelModal.style.display = 'none';
-                }
-            }
-        </script>
-        <?php
+        }
     }
 
-    private function handle_form_submitted( $post_data, $levels ) {
-        if( $post_data['action'] === 'add_level' ) {
-            // Handle form submission for adding a new level
-            $new_level_name = $post_data['level_name'];
-            $new_level_access = isset($post_data['level_access']) ? $post_data['level_access'] : array();
+    /**
+	 * Checks the current form submission and handles it accordingly.
+	 *
+	 * @param array $post_data The form submission data.
+	 * @return array The saved levels from the database.
+	 */
+	public function check_current_form_submission( $post_data )
+	{
+        $module_data = $this->handle_form_submitted( $post_data );
+		// Handle form submissions for adding/editing/deleting levels
+		if ( isset( $post_data['action'] ) ) {
+			// Display a success message
+			if ( !empty( $this->submission_status ) && is_array( $this->submission_status ) ) {
+				$message = sprintf(
+					'<div class="%s"><p>%s</p></div>',
+					$this->submission_status[0], $this->submission_status[1]
+				);
 
-            // Create a new level entry
-            $new_level = array(
-                'name' => $new_level_name,
-                'access' => $new_level_access,
-                'created' => current_time('mysql'),
-                'modified' => current_time('mysql')
-            );
+				echo $message;
+			}
 
-            // Add the new level to the existing levels array
-            $levels[] = $new_level;
-        } else if ( $post_data['action'] === 'delete_levels' ) {
-            // Handle form submission for deleting levels
-            $selected_levels = isset($post_data['selected_levels']) ? $post_data['selected_levels'] : array();
+		}
 
-            // Remove the selected levels from the levels array
-            foreach ($selected_levels as $level_id) {
-                if (isset($levels[$level_id])) {
-                    unset($levels[$level_id]);
+		return $module_data;
+	}
+
+    /**
+     * Handle the submitted form data.
+     *
+     * @param array $post_data The data submitted via the form.
+     * @return array The results retrieved from the database.
+     */
+    public function handle_form_submitted( $post_data ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . $this->module_settings_database_id;
+
+        if( !empty( $post_data ) ) {
+
+            $action = $post_data['action'];
+            $action_formatted = strtolower( $this->module_name );
+
+            if ( $action === 'add_' . $action_formatted ) {
+
+                $post_data['created'] = current_time( 'mysql' );
+
+                // Insert the new level data into the database
+                $wpdb->insert(
+                    $table_name,
+                    [
+                        'level_name' => $post_data['level_name'],
+                        'level_access' => serialize( $post_data['level_access'] ),
+                        'created' => $post_data['created'],
+                        'modified' => $post_data['created'], // Initial modification time is the same as creation time
+                    ],
+                    [ '%s', '%s', '%s', '%s' ]
+                );
+
+                $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' added successfully.' ];
+            } else {
+                $level_id = $post_data['level_id'];
+
+                // Retrieve the existing level data from the database
+                $existing_level = $wpdb->get_row(
+                    $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $level_id ),
+                    ARRAY_A
+                );
+
+                if ( !empty( $existing_level ) ) {
+                    if( $action === 'edit_' . $action_formatted ) {
+                        // Update the existing level data in the database
+                        $wpdb->update(
+                            $table_name,
+                            [
+                                'level_name' => $post_data['level_name'],
+                                'level_access' => serialize( $post_data['level_access'] ),
+                                'modified' => current_time( 'mysql' ),
+                            ],
+                            [ 'id' => $level_id ],
+                            [ '%s', '%s', '%s' ],
+                            [ '%d' ]
+                        );
+
+                        $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' modified successfully.' ];
+                    } elseif ( $action === 'delete_' . $action_formatted ) {
+                        // Delete the existing level data from the database
+                        $wpdb->delete(
+                            $table_name,
+                            [ 'id' => $level_id ],
+                            [ '%d' ]
+                        );
+
+                        $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' deleted successfully.' ];
+                    }
                 }
+            }
+
+            if( empty( $this->submission_status ) ) {
+                $this->submission_status = [
+                    'error',
+                    ucfirst( $this->module_name ) . ' could not be saved due to an unforeseen error.'
+                ];
             }
         }
 
-        // Save the updated levels array back to the database
-        update_option( 'fkwmembership_levels_available', $levels );
-
-        // Redirect back to the levels page to prevent form resubmission
-        wp_redirect( esc_url( admin_url( 'admin.php?page=fkwmembership_levels' ) ) );
-        exit;
+        return $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
     }
 
 }

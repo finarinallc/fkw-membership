@@ -29,7 +29,7 @@ class ComposerStaticInit4e229e6e7bf7cdd92f7cf7fd7e5e2147
         ),
         'F' => 
         array (
-            'Finarina\\Membership\\' => 20,
+            'FKW\\Membership\\' => 15,
         ),
         'D' => 
         array (
@@ -58,7 +58,7 @@ class ComposerStaticInit4e229e6e7bf7cdd92f7cf7fd7e5e2147
         array (
             0 => __DIR__ . '/..' . '/graham-campbell/result-type/src',
         ),
-        'Finarina\\Membership\\' => 
+        'FKW\\Membership\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),

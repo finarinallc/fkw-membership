@@ -1,5 +1,5 @@
 <?php
-namespace Finarina\Membership\Admin;
+namespace FKW\Membership\Admin;
 
 class WooCommerce {
 
@@ -50,20 +50,20 @@ class WooCommerce {
         if (!current_user_can('manage_options')) {
             wp_die(__('You do not have permission to access this page.'));
         }
-    
+
         // Get the saved levels from the database
         $levels = get_option('fkwmembership_levels_available', array());
-    
+
         // Code to handle form submissions for adding/editing/deleting points intervals
         if ( isset( $_POST['action'] ) ) {
             $this->handle_form_submitted( $_POST, $levels );
         }
         ?>
-    
+
         <div class="wrap fkw-membership-settings-form">
             <h1>FKW Membership WooCommerce Integration Settings</h1>
             No extra settings necessary for WooCommerce yet. Additional settings can be found in the product pages.
-            
+
         </div>
         <?php
     }
@@ -71,8 +71,8 @@ class WooCommerce {
     private function handle_form_submitted( $post_data, $woocommerce ) {
         if ($post_data['action'] === 'save_woocommerce_integration_settings') {
             // Handle form submission for woocommerce integration
-            
-        } 
+
+        }
 
         // Save the updated levels array back to the database
         update_option( 'fkwmembership_woocommerce_integration', $woocommerce );
@@ -127,5 +127,5 @@ class WooCommerce {
 
         return $subscription_string;
     }
-    
+
 }

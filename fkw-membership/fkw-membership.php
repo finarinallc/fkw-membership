@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name: FKW Membership
- * Plugin URI: https://dev.finarina.com/wordpress/fkw-membership
+ * Plugin URI: https://developer.finarina.com/services/wordpress-customization/fkw-membership
  * Description: Creates a membership system on your WordPress website. Integrates with WooCommerce.
  * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://dev.finarina.com/wordpress
- * License: GPLv2 or later
+ * Author: Finarina Development
+ * Author URI: https://developer.finarina.com/services/wordpress-customization/
+ * License: GPLv3 or later
  * Text Domain: fkwmembership
  * Domain Path: /languages
  */
@@ -15,8 +15,11 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
 }
 
+define( 'FKWMEMBERSHIP_NAME', 'FKW Membership' );
 define( 'FKWMEMBERSHIP_NAMESPACE', 'fkwmembership' );
 define( 'FKWMEMBERSHIP_VERSION', '1.0.0' );
+define( 'FKWMEMBERSHIP_PLUGIN_BASENAME', plugin_dir_path( __FILE__ ) );
+define( 'FKWMEMBERSHIP_PLUGIN_BASEURL', plugin_dir_url( __FILE__ ) );
 
 /**
  * The child theme class autoloader.
@@ -44,7 +47,7 @@ fkwmembership();
  * @return FKWMembership|null
  */
 function fkwmembership() {
-    return Finarina\Membership\FKWMembership::get_instance();
+    return FKW\Membership\FKWMembership::get_instance( FKWMEMBERSHIP_NAMESPACE, FKWMEMBERSHIP_VERSION );
 }
 
 /**

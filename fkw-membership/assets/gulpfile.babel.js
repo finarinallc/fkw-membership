@@ -5,7 +5,7 @@ import yargs from 'yargs';
 // css related packages
 import * as dartsass from 'sass'
 import gulpsass from 'gulp-sass';
-const sass = gulpsass( dartsass );
+const sass = gulpsass(dartsass);
 import cleanCss from 'gulp-clean-css';
 import gulpif from 'gulp-if';
 import postcss from 'gulp-postcss';
@@ -22,45 +22,45 @@ import rename from 'gulp-rename';
 const PRODUCTION = yargs.argv.prod;
 
 export const styles = () => {
-  return src(['assets/src/scss/main.scss', 'assets/src/scss/admin.scss'])
+  return src(['src/scss/main.scss', 'src/scss/admin.scss'])
     .pipe(gulpif(!PRODUCTION, sourcemaps.init()))
     .pipe(sass().on('error', sass.logError))
-    .pipe(gulpif(PRODUCTION, postcss([ autoprefixer ])))
-    .pipe(gulpif(PRODUCTION, cleanCss({compatibility:'*'})))
+    .pipe(gulpif(PRODUCTION, postcss([autoprefixer])))
+    .pipe(gulpif(PRODUCTION, cleanCss({ compatibility: '*' })))
     .pipe(gulpif(!PRODUCTION, sourcemaps.write()))
     .pipe(dest((file) => {
-			return 'assets/dist/css';
+      return 'dist/css';
     }));
 };
 
 export const images = () => {
-  return src(['assets/src/img/**/*.{jpg,jpeg,png,svg,gif,webp}', 'assets/src/vendor/img/**/*.{jpg,jpeg,png,svg,gif}'])
+  return src(['src/img/**/*.{jpg,jpeg,png,svg,gif,webp}', 'src/vendor/img/**/*.{jpg,jpeg,png,svg,gif}'])
     .pipe(gulpif(PRODUCTION, imagemin()))
     .pipe(dest((file) => {
-		if (file.dirname.includes('vendor')) {
-			return 'assets/dist/vendor/img';
-		}
-		
-		return 'assets/dist/img';
+      if (file.dirname.includes('vendor')) {
+        return 'dist/vendor/img';
+      }
+
+      return 'dist/img';
     }));
 };
 
 export const scripts = () => {
-	return src(['assets/src/js/*.js'])
-		.pipe(minify({
-			ext: {
-				min: '.min.js'
-			},
-			noSource: true
-		}))
-		.pipe(dest('assets/dist/js'));
+  return src(['src/js/*.js'])
+    .pipe(minify({
+      ext: {
+        min: '.min.js'
+      },
+      noSource: true
+    }))
+    .pipe(dest('dist/js'));
 };
 
 // continually run the compiling scripts while files are saved/changed/added
 export const watchForChanges = () => {
-  watch('assets/src/scss/**/*.scss', styles);
-  watch('assets/src/js/**/*.js', scripts);
-  watch('assets/src/img/**/*.{jpg,jpeg,png,svg,gif}', images);
+  watch('src/scss/**/*.scss', styles);
+  watch('src/js/**/*.js', scripts);
+  watch('src/img/**/*.{jpg,jpeg,png,svg,gif}', images);
 };
 
 
@@ -68,7 +68,7 @@ export const watchForChanges = () => {
 // COMMANDS
 ////
 // clean up the dist folder
-export const clean = () => del(['assets/dist']);
+export const clean = () => del(['dist']);
 // setup dev and build processes to reference in package.json
 export const build = series(clean, parallel(styles, images, scripts));
 export const dev = series(clean, build, watchForChanges);

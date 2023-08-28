@@ -1,0 +1,86 @@
+// Breakpoints
+$break-xsmall: 320px;
+$break-small: 480px;
+$break-medium: 768px;
+$break-large: 960px;
+$break-xlarge: 1200px;
+
+// CSS Variables
+:root {
+	// default colors
+	--fkwmembership--color--default-white: #fff;
+	--fkwmembership--color--default-white-off: #eff1f3;
+	--fkwmembership--color--default-black: #000;
+	--fkwmembership--color--default-black-off: #272727;
+	--fkwmembership--color--default-gray: #696773;
+	--fkwmembership--color--default-red: #B31414;
+	--fkwmembership--color--default-red-light: #F0C2C2;
+	--fkwmembership--color--default-red-dark: #450909;
+	--fkwmembership--color--default-green: #56E65E;
+	--fkwmembership--color--default-green-light: #C2F0C4;
+	--fkwmembership--color--default-green-dark: #3A783E;
+	--fkwmembership--color--default-purple: #7F30D8;
+	--fkwmembership--color--default-purple-light: #C5A5EB;
+	--fkwmembership--color--default-purple-dark: #2E0A56;
+	--fkwmembership--color--default-blue: #3044d8;
+	--fkwmembership--color--default-blue-light: #d7dbfc;
+	--fkwmembership--color--default-blue-dark: #0f1652;
+	// opacity at 20%
+	--fkwmembership--color--default-white-op: rgba(255, 255, 255, 0.2);
+	--fkwmembership--color--default-black-op: rgba(0, 0, 0, 0.2);
+	// opacity at 80%
+	--fkwmembership--color--default-white-op-dark: rgba(255, 255, 255, 0.8);
+	--fkwmembership--color--default-black-op-dark: rgba(0, 0, 0, 0.8);
+
+	// basic styles
+	// forms
+	--fkwmembership--form-error--text-color: var(--fkwmembership--color--default-red-dark);
+	--fkwmembership--form-error--bg-color: var(--fkwmembership--color--default-red-light);
+	--fkwmembership--form-ok--color: var(--fkwmembership--color--default-green-light);
+	// body
+	--fkwmembership--text-color--body: var(--fkwmembership--color--default-black-off);
+	// links
+	--fkwmembership--link-text-color: var(--fkwmembership--color--default-blue);
+	--fkwmembership--link-text-color-hover: var(--fkwmembership--color--default-blue-light);
+	--fkwmembership--link-text-color-active: var(--fkwmembership--color--default-red);
+	--fkwmembership--link-text-color-visited: var(--fkwmembership--color--default-purple);
+	// buttons
+	--fkwmembership--button-bg-color: var(--fkwmembership--color--default-blue);
+	--fkwmembership--button-bg-color-hover: var(--fkwmembership--color--default-blue-light);
+	--fkwmembership--button-bg-color-active: var(--fkwmembership--color--default-red);
+	--fkwmembership--button-bg-color-visited: var(--fkwmembership--color--default-purple);
+	--fkwmembership--button-text-color: var(--fkwmembership--color--default-white);
+	--fkwmembership--button-text-color-hover: var(--fkwmembership--color--default-blue);
+	// blockquote
+	--fkwmembership--blockquote-border-color: var(--fkwmembership--color--default-blue);
+	--fkwmembership--blockquote-text-color: var(--fkwmembership--color--gray);
+	// default font families
+	--fkwmembership--body-font: Tahoma, sans-serif;
+	--fkwmembership--heading-font: Georgia, serif;
+	--fkwmembership--decorative-font: 'Times New Roman', serif;
+	// default font sizing
+	--fkwmembership--default-font-size: 1rem;
+	--fkwmembership--body-font-size: var(--fkwmembership--default-font-size);
+	--fkwmembership--h1-font-size: 1.5rem;
+	--fkwmembership--h2-font-size: 1.4rem;
+	--fkwmembership--h3-font-size: 1.3rem;
+	--fkwmembership--h4-font-size: 1.25rem;
+	--fkwmembership--h5-font-size: 1.2rem;
+	--fkwmembership--h6-font-size: 1.1rem;
+	// default font spacing
+	--fkwmembership--default-letter-spacing: .1rem;
+	--fkwmembership--default-line-height: 1.2rem;
+	--fkwmembership--body-letter-spacing: var(--fkwmembership--default-letter-spacing);
+	--fkwmembership--body-line-height: normal;
+	--fkwmembership--heading-letter-spacing: .05rem;
+	--fkwmembership--heading-line-height: 1.1rem;
+	// default spacing
+	--fkwmembership--padding-topbottom-size: 1rem;
+	--fkwmembership--padding-rightleft: 1.1rem;
+	--fkwmembership--margin-center-size: 0 auto;
+	// default borders
+	--fkwmembership--border-size: 3px;
+	--fkwmembership--border-radius: 3px;
+	--fkwmembership--border-color: var(--fkwmembership--color--default-blue);
+	--fkwmembership--border-type: solid;
+}

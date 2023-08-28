@@ -1,5 +1,5 @@
 <?php
-namespace Finarina\Membership\Admin;
+namespace FKW\Membership\Admin;
 
 class Discord {
 
@@ -47,20 +47,20 @@ class Discord {
         if (!current_user_can('manage_options')) {
             wp_die(__('You do not have permission to access this page.'));
         }
-    
+
         // Get the saved levels from the database
         $levels = get_option('fkwmembership_levels_available', array());
-    
+
         // Code to handle form submissions for adding/editing/deleting points intervals
         if ( isset( $_POST['action'] ) ) {
             $this->handle_form_submitted( $_POST, $levels );
         }
         ?>
-    
+
         <div class="wrap fkw-membership-settings-form">
             <h1>FKW Membership Discord Integration Settings</h1>
-    
-            
+
+
         </div>
         <?php
     }
@@ -75,8 +75,8 @@ class Discord {
     private function handle_form_submitted( $post_data, $discord ) {
         if ($post_data['action'] === 'save_discord_integration_settings') {
             // Handle form submission for discord integration
-            
-        } 
+
+        }
 
         // Save the updated levels array back to the database
         update_option( 'fkwmembership_discord_integration', $discord );
@@ -85,7 +85,7 @@ class Discord {
         wp_redirect( esc_url( admin_url( 'admin.php?page=fkwmembership_discord' ) ) );
         exit;
     }
-    
+
     public function check_membership_access() {
         // Check if the user has access to Discord integration based on their membership level.
         if ( ! current_user_can( 'access_discord' ) ) {
@@ -110,16 +110,16 @@ class Discord {
     public function add_discord_script() {
         // Enqueue the custom script
         wp_enqueue_script( 'discord-api', 'https://discord.com/api/gateway', array(), '1.0', true );
-    
+
         // Localize the script with your Discord server details
         $server_details = array(
             'server_id' => 'YOUR_SERVER_ID',
             'api_key' => 'YOUR_API_KEY',
         );
         wp_localize_script( 'discord-api', 'serverDetails', $server_details );
-    
+
         // Load your custom script that interacts with Discord API
         wp_enqueue_script( 'fkw-discord-api', plugin_dir_url( __FILE__ ) . '../public/assets/dist/js/fkw-discord.min.js', array( 'discord-api' ), '1.0', true );
     }
-    
+
 }

@@ -1,0 +1,74 @@
+@charset"utf-8";
+
+// Variables
+@import 'configs/var';
+
+// Mixins
+@import 'configs/mixin';
+
+.fkwmembership-form-fields {
+    padding: var(--fkwmembership--padding-topbottom-size) var(--fkwmembership--padding-rightleft);
+
+    .modal {
+        background-color: var(--fkwmembership--color--default-black-op-dark);
+        display: none;
+        height: 100%;
+        left: 0;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1;
+    }
+
+    .modal-content {
+        background-color: var(--fkwmembership--color--default-white);
+        border: 1px solid var(--fkwmembership--color--default-gray);
+        margin: 15% auto;
+        max-width: 500px;
+        padding: 20px;
+        position: relative;
+        width: 80%;
+    }
+
+    .close {
+        cursor: pointer;
+        font-size: 20px;
+        font-weight: bold;
+        position: absolute;
+        right: 10px;
+        top: 10px;
+    }
+
+    label {
+        display: block;
+        padding: 0 0 10px;
+
+        @import 'defaults/formfields';
+    }
+
+    .form-table {
+        width: 100%;
+
+        @include bp(largedesktop) {
+            width: 60%;
+        }
+
+        td {
+            .description {
+                display: block;
+                font-size: 16px;
+                padding: 0 0 12px;
+            }
+
+            .fields-group {
+                border-bottom: 1px solid var(--fkwmembership--color--default-gray);
+                margin: 0 0 20px;
+                padding: 0 0 20px;
+
+                &:last-child {
+                    border: 0;
+                }
+            }
+        }
+    }
+}

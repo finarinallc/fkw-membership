@@ -1,136 +1,118 @@
 <?php
-namespace Finarina\Membership;
+namespace FKW\Membership;
 
-use Finarina\Membership\Admin\Levels;
-use Finarina\Membership\Admin\Points;
-use Finarina\Membership\Admin\WooCommerce;
-use Finarina\Membership\Admin\Discord;
+use FKW\Membership\FKWMembership;
+
+use FKW\Membership\Admin\SettingsPage;
+
+use FKW\Membership\Admin\Levels;
+use FKW\Membership\Admin\Points;
+use FKW\Membership\Admin\WooCommerce;
+use FKW\Membership\Admin\Discord;
 
 class Admin {
 
-    private $submission_status;
-
-    private $default_membership_system_settings = [
-        'activate_system' => [
-            'Membership System',
-            1
-        ],
-        'member_new_registration' => [
-            'New Member Registration',
-            0
-        ],
-        'individual_member_registration' => [
-            'Individual Member Registrations',
-            0
-        ],
-        'organization_member_registration' => [
-            'Organization/Business Member Registrations',
-            0
-        ],
-        'member_points_system' => [
-            'Member Points System',
-            0
-        ],
-        'member_woocommerce_integration' => [
-            'Member WooCommerce Integration',
-            0
-        ],
-        'member_discord_integration' => [
-            'Member Discord Integration',
-            0
-        ]
-    ];
-
-    private $default_access_settings_settings = [
-        'exclusive_content' => [
-            'Exclusive Content Access',
-            0
-        ],
-        'early_access' => [
-            'Early Access to Content',
-            0
-        ],
-        'live_chat_access' => [
-            'Live Chat Access',
-            0
-        ],
-        'event_access' => [
-            'Event Access',
-            0
-        ],
-        'discount_code_access' => [
-            'Discount Code Access',
-            0
-        ]
-    ];
-
-    private $default_all_settings;
+	/**
+     * The single instance of the class.
+     *
+     * @var Admin|null
+     */
+    private static $instance = null;
 
     /**
-     * Constructor for the class.
-     *
-     * Hooks into WordPress admin menu to add the custom top-level menu link.
-     * Hooks into the custom top-level menu page to handle form submissions.
-     * Enqueues CSS stylesheet for the admin pages.
+     * FKWMembership class object
+	 *
+     * @var FKWMembership|null
      */
-    public function __construct() {
-        // Initialize default settings
-        $this->default_all_settings = [ 
-            'membership_system' => $this->default_membership_system_settings,
-            'access_settings' => $this->default_access_settings_settings,
-        ];
-        // Hook into WordPress admin menu to add the custom top-level menu link.
-        add_action( 'admin_menu', array( $this, 'add_top_level_menu' ) );
+    public $fkwmembership;
 
-        // Enqueue CSS stylesheet for the admin pages
-        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
+	/**
+	 * FKWMembership SettingsPage object
+	 *
+     * @var SettingsPage|null
+	 */
+	public $fkwmembership_settingspage;
+
+	/**
+	 * Settings ID to associate fields with database
+	 */
+	public $settings_id;
+
+    /**
+     * Settings database ID to associate fields with
+     */
+    public $settings_database_id;
+
+	/**
+	 * Settings page ID to associate fields with specific page
+	 */
+	public $settings_page_id;
+
+	/**
+	 * General settings object to create page fields
+	 */
+	public $settings_page;
+
+	/**
+     * Get the single instance of the class.
+     *
+     * @return Admin|null
+     */
+    public static function get_instance() {
+        if ( null === self::$instance ) {
+            self::$instance = new self();
+        }
+
+        return self::$instance;
     }
 
-    /**
-     * Enqueue the admin CSS stylesheet.
-     *
-     * @return void
-     */
-    public function enqueue_admin_styles() {
-        // Enqueue the admin CSS stylesheet
-        wp_enqueue_style( 'fkwmembership-admin-style', plugin_dir_url( __FILE__ ) . '../public/assets/dist/css/admin.css' );
-    }
+	/**
+	 * Constructor for the class.
+	 *
+	 * Initializes the class and sets up the necessary properties.
+	 *
+	 * @return void
+	 */
+	public function __construct() {
 
-    /**
-     * A function to add top-level menu links for managing membership settings.
-     *
-     * @return void
-     */
-    public function add_top_level_menu() {
-        // Add a top-level menu link for managing member levels.
-        add_menu_page(
-            'FKW Membership',   // Page title
-            'FKW Membership',   // Menu title
-            'manage_options',   // Capability required to access the menu page
-            'fkwmembership',    // Menu slug
-            array( $this, 'render_membership_settings_page' ), // Callback function to render the menu page
-            'dashicons-groups', // Icon for the menu link
-            30 // Position of the menu link in the admin menu
-        );
+        $this->fkwmembership = FKWMembership::get_instance();
+		$this->fkwmembership_settingspage = SettingsPage::get_instance();
 
-        register_setting( 'fkwmembership_settings_group', 'fkwmembership_general_membership_system' );
+		$this->settings_id = $this->fkwmembership->plugin_namespace . '_settings';
+        $this->settings_database_id = $this->settings_id . '_general';
+		$this->settings_page_id = $this->settings_id . '_page';
 
-        new Levels();
 
-        $options = get_option( 'fkwmembership_general_membership_system', array() );
+	}
+
+    public function init() {
+
+		// enqueues the styles and scripts for the admin area specificially
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_styles' ] );
+
+		// registers the settings group and fields to that new page
+		add_action( 'admin_init', [ $this, 'register_systems_settings_group' ] );
+        add_action( 'admin_init', [ $this, 'register_access_settings_group' ] );
+
+		// creates a settings page area
+		add_action( 'admin_menu', [ $this, 'add_top_level_menu' ] );
+
+        $admin_levels = new Levels();
+		$admin_levels->init();
+
+        $options = get_option( $this->settings_database_id );
 
         if( !empty( $options ) && is_array( $options ) ) {
 
-            $system = $options['membership_system'];
+            if( !empty( $system = $options['system_features'] ) ) {
 
-            if( !empty( $system ) ) {
-
-                $points = !empty( $system['member_points_system'] ) ? $system['member_points_system'] : 0;
-                $woocommerce = !empty( $system['member_woocommerce_integration'] ) ? $system['member_woocommerce_integration'] : 0;
-                $discord = !empty( $system['member_discord_integration'] ) ? $system['member_discord_integration'] : 0;
+                $points = !empty( $system['member_points_system'] ) ? (int)$system['member_points_system'] : 0;
+                $woocommerce = !empty( $system['member_woocommerce_integration'] ) ? (int)$system['member_woocommerce_integration'] : 0;
+                $discord = !empty( $system['member_discord_integration'] ) ? (int)$system['member_discord_integration'] : 0;
 
                 if ( $points === 1 ) {
-                    new Points();
+                    $admin_points = new Points();
+					$admin_points->init();
                 }
 
                 if ( $woocommerce === 1 ) {
@@ -143,131 +125,140 @@ class Admin {
 
             }
 
-        }   
-                
-    }
+        }
+
+	}
 
     /**
-     * Renders the membership settings page.
+     * Enqueue the admin CSS stylesheet.
      *
      * @return void
      */
-    public function render_membership_settings_page(): void{
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have permission to access this page.'));
-        }
-
-        // Check if form is submitted and update the settings
-        if ( isset( $_POST['submit'] ) ) {
-            $this->handle_form_submitted( $_POST );
-
-            // Display a success message
-            if( !empty( $this->submission_status ) && is_array( $this->submission_status ) ) {
-                echo '<div class="' . $this->submission_status[0] . '"><p>' . $this->submission_status[1] . '</p></div>';
-            }
-        }
-
-        // reset the submission status so it doesnt keep appearing
-        $this->submission_status = NULL;
-
-        if( empty( $fkwmembership_db_data = get_option( 'fkwmembership_general_membership_system' ) ) ) {
-            $settings = $this->default_all_settings;
-        } else {
-            $settings = $fkwmembership_db_data;
-        }
-        ?>
-
-        <div class="wrap fkw-membership-settings-form">
-            <h1>FKW Membership General Settings</h1>
-
-            <form method="post">
-                <input type="hidden" name="fkwmembership_settings_type" value="save_fkwmemebership_general_settings">
-                <?php settings_fields('fkwmembership_general_membership_system'); ?>
-                <?php do_settings_sections('fkwmembership_general_membership_system'); ?>
-
-                <?php var_dump( $settings ); ?>
-
-                <h2>Membership System Settings</h2>
-                <table class="form-table">
-                    <tr valign="top">
-                        <th scope="row">Enable/Disable Settings</th>
-                        <td>
-                            <div class="fields-group">
-                            <?php foreach( $settings['membership_system'] as $key => $setting ) {
-                                echo '<input type="hidden" name="membership_system[' . $key . '][0]" value="' . $setting[0] . '" />';
-                                $this->render_checkbox_row( 'membership_system[' . $key . '][1]', $setting[1], $setting[0] );
-                            }
-                            ?>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-
-                <h2>Access Settings</h2>
-                <table class="form-table">
-                    <tr valign="top">
-                        <th scope="row">Enable/Disable Access Features</th>
-                        <td>
-                            <div class="fields-group">
-                            <?php foreach( $settings['access_settings'] as $key => $setting ) {
-                                $this->render_checkbox_row( 'access_settings[' . $key . '][1]', (int)$setting[1], $setting[0] );
-                            }
-                            ?>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-
-                <?php submit_button(); ?>
-            </form>
-        </div>
-        <?php
-    }
-    
-    /**
-     * Renders a checkbox row in HTML table format.
-     *
-     * @param string $field_name The name of the checkbox field.
-     * @param mixed $field_value The value of the checkbox field.
-     * @param string $field_label The label of the checkbox field.
-     * @return void
-     */
-    private function render_checkbox_row($field_name, $field_value, $field_label) {
-        ?>
-        <label>
-            <input type="checkbox" name="<?php echo $field_name; ?>" value="1" <?php checked($field_value, 1); ?>>
-            Enable <?php echo $field_label; ?>
-        </label>
-        <?php
+    public function enqueue_admin_styles() {
+        // Enqueue the admin CSS stylesheet
+        wp_enqueue_style( FKWMEMBERSHIP_NAMESPACE . '-admin-style', FKWMEMBERSHIP_PLUGIN_BASEURL . 'assets/dist/css/admin.css' );
     }
 
     /**
-     * Handles the form submission for discord integration.
-     *
-     * @param array $post_data The data submitted from the form.
-     * @param object $discord The discord object.
-     * @return void
-     */
-    private function handle_form_submitted( $post_data ) {
-        if ( !empty( $post_data['fkwmembership_settings_type'] ) && $post_data['fkwmembership_settings_type'] === 'save_fkwmemebership_general_settings' ) {            
-            // Save the submitted settings
-            $settings = array(
-                'membership_system' => isset($_POST['membership_system']) ? $_POST['membership_system'] : $this->default_membership_system_settings,
-                'access_settings' => isset($_POST['access_settings']) ? $_POST['access_settings'] : $this->default_access_settings_settings,
-            );
+	 * Adds a top-level menu to the WordPress admin menu.
+	 *
+	 * @since    1.0.0
+	 */
+	public function add_top_level_menu() {
 
-            // Save the updated settings to the database
-            update_option('fkwmembership_general_membership_system', $settings);
+        add_menu_page(
+            __( FKWMEMBERSHIP_NAME, FKWMEMBERSHIP_NAMESPACE ),
+            __( FKWMEMBERSHIP_NAME, FKWMEMBERSHIP_NAMESPACE ),
+            'manage_options',
+            $this->settings_id,
+            [ $this, 'render_settings_page' ],
+            'dashicons-groups',
+            71
+        );
 
-            $this->submission_status = ['updated', 'Settings saved successfully.'];
-            
+	}
+
+    public function register_systems_settings_group() {
+
+        register_setting( $this->settings_page_id, $this->settings_database_id );
+
+		$this->fkwmembership_settingspage->init(
+			$this->settings_id,
+            $this->settings_database_id,
+			$this->settings_page_id,
+			$this->settings_id . '_systems',
+			'General Settings',
+			'Enable or disable system wide settings for your membership configuration. Disabling a feature will turn off the feature on the website, but retain the data in the database. If you need to clear the data from the database, you can do so by clearing the member data here.'
+		);
+
+		$this->fkwmembership_settingspage->register_settings_init();
+
+		$fields_to_register = [
+			'System Features',
+			[
+				'id' => $this->settings_id . '_system_features',
+				'field' => $this->settings_id . '_system_features_val',
+				'name' => 'system_features',
+				'type' => 'checkbox',
+				'value' => [
+					'activate_system' => 'Membership System',
+					'member_new_registration' => 'New Member Registration',
+					'individual_member_registration' => 'Individual Member Registrations',
+					'organization_member_registration' => 'Organization/Business Member Registrations',
+					'member_points_system' => 'Member Points System',
+					'member_woocommerce_integration' => 'Member WooCommerce Integration',
+					'member_discord_integration' => 'Member Discord Integration',
+				],
+				'placeholder' => '',
+				'default_value' => '',
+				'class' => 'form-field',
+                'style' => ''
+			]
+		];
+
+		$this->fkwmembership_settingspage->register_settings_field_to_section(
+			...$fields_to_register
+		);
+
+	}
+
+    public function register_access_settings_group() {
+
+        register_setting( $this->settings_page_id, $this->settings_id . '_general' );
+
+		$this->fkwmembership_settingspage->init(
+			$this->settings_id,
+            $this->settings_id . '_general',
+			$this->settings_page_id,
+			$this->settings_id . '_access',
+			'Access Settings',
+			'Enable or disable accessibility specific allowances for your members. Disabling a feature will turn off the feature on the website, but retain the data in the database. If you need to clear the data from the database, you can do so by clearing the member data here.'
+		);
+
+		$this->fkwmembership_settingspage->register_settings_init();
+
+		$fields_to_register = [
+			'Access Settings',
+			[
+				'id' => $this->settings_id . '_access_settings',
+				'field' => $this->settings_id . '_access_settings_val',
+				'name' => 'access_settings',
+				'type' => 'checkbox',
+				'value' => [
+					'exclusive_content' => 'Exclusive Content Access',
+					'early_access' => 'Early Access to Content',
+					'live_chat_access' => 'Live Chat Access',
+					'event_access' => 'Event Access',
+					'discount_code_access' => 'Discount Code Access',
+				],
+				'placeholder' => '',
+				'default_value' => '',
+				'class' => 'form-field',
+				'style' => ''
+			]
+		];
+
+		$this->fkwmembership_settingspage->register_settings_field_to_section(
+			...$fields_to_register
+		);
+
+	}
+
+	public function render_settings_page() {
+
+		if ( !current_user_can( 'manage_options' ) ) {
+            return;
         }
 
-        $this->submission_status = ['error', 'Settings could not save due to an error.'];
+		if ( isset( $_GET['settings-updated'] ) ) {
+			add_settings_error(
+                $this->fkwmembership->plugin_namespace . '-messages',
+                $this->fkwmembership->plugin_namespace . '-message',
+                __( 'Settings updated', $this->fkwmembership->plugin_namespace ), 'updated' );
+		}
 
-        // Redirect back to the points page to prevent form resubmission
-        wp_redirect( esc_url( admin_url( 'admin.php?page=fkwmembership' ) ) );
-        exit;
-    }
-    
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'partials/admin/settings-page.php';
+
+	}
+
 }
