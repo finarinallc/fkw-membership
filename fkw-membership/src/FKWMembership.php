@@ -3,14 +3,7 @@ namespace FKW\Membership;
 
 // Include necessary files or classes here, if needed.
 
-class FKWMembership {
-
-    /**
-     * The single instance of the class.
-     *
-     * @var FKWMembership|null
-     */
-    private static $instance = null;
+class FKWMembership extends Base {
 
     /**
      * Plugin namespace.
@@ -27,25 +20,12 @@ class FKWMembership {
     public $version = FKWMEMBERSHIP_VERSION;
 
     /**
-     * Get the single instance of the class.
-     *
-     * @return FKWMembership|null
-     */
-    public static function get_instance() {
-        if ( null === self::$instance ) {
-            self::$instance = new self();
-        }
-
-        return self::$instance;
-    }
-
-    /**
      * Constructor
      *
      * @since 1.0.0
      * @return void
      */
-    private function __construct() {
+    public function __construct() {
         // Initialize the plugin.
         add_action( 'plugins_loaded', array( $this, 'init' ) );
     }
@@ -62,7 +42,10 @@ class FKWMembership {
 
         // render admin page settings
         $admin = new Admin();
-        $admin->init();
+        $admin->admin_init();
+
+        $subscription = Subscription::get_instance();
+        $subscription->init();
 
     }
 
@@ -106,12 +89,14 @@ class FKWMembership {
     private function install_database_tables() {
         global $wpdb;
 
+        $levels_table_name      = $wpdb->prefix . 'fkwmembership_levels';
+        $points_table_name      = $wpdb->prefix . 'fkwmembership_levels_points';
+        $points_logs_table_name = $wpdb->prefix . 'fkwmembership_levels_points_logs';
+        $users_table_name       = $wpdb->prefix . 'users';
+
         /**
          * LEVELS DATABASE TABLE
          */
-
-        $levels_table_name = $wpdb->prefix . 'fkwmembership_levels';
-
         if ( $wpdb->get_var( "SHOW TABLES LIKE '$levels_table_name'" ) != $levels_table_name ) {
             $charset_collate = $wpdb->get_charset_collate();
 
@@ -120,8 +105,9 @@ class FKWMembership {
                 id INT NOT NULL AUTO_INCREMENT,
                 level_name VARCHAR(255) NOT NULL,
                 level_access TEXT,
+                free TINYINT(1) DEFAULT 0 NOT NULL,
                 created DATETIME NOT NULL,
-                modified DATETIME NOT NULL,
+                modified DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
                 PRIMARY KEY (id)
             ) $charset_collate;";
 
@@ -132,10 +118,8 @@ class FKWMembership {
 
 
         /**
-         * POINTS DATABASE TABLE
+         * POINTS DATABASE TABLES
          */
-        $points_table_name = $wpdb->prefix . 'fkwmembership_levels_points';
-
         if ( $wpdb->get_var( "SHOW TABLES LIKE '$points_table_name'" ) != $points_table_name ) {
             $charset_collate = $wpdb->get_charset_collate();
 
@@ -143,11 +127,12 @@ class FKWMembership {
             $sql = "CREATE TABLE $points_table_name (
                 id INT NOT NULL AUTO_INCREMENT,
                 level_id INT NOT NULL,
-                points_interval VARCHAR(255) NOT NULL,
+                points_interval INT NOT NULL,
+                points_interval_type VARCHAR(255) NOT NULL,
                 points_per INT NOT NULL,
-                active TINYINT(1) NOT NULL,
+                active TINYINT(1) DEFAULT 1 NOT NULL,
                 created DATETIME NOT NULL,
-                modified DATETIME NOT NULL,
+                modified DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
                 PRIMARY KEY (id),
                 FOREIGN KEY (level_id) REFERENCES $levels_table_name (id)
             ) $charset_collate;";
@@ -156,6 +141,27 @@ class FKWMembership {
             dbDelta( $sql );
 
         }
+
+        if ( $wpdb->get_var( "SHOW TABLES LIKE '$points_table_name'" ) != $points_logs_table_name ) {
+            $charset_collate = $wpdb->get_charset_collate();
+
+            // SQL query to create the table
+            $sql = "CREATE TABLE $points_logs_table_name (
+                id INT NOT NULL AUTO_INCREMENT,
+                user_id BIGINT(20) NOT NULL,
+                point_action ENUM('Added', 'Removed', 'No Change') DEFAULT 'No Change' NOT NULL,
+                point_action_by VARCHAR(255) DEFAULT 'System' NOT NULL,
+                point_quantity INT DEFAULT 0 NOT NULL,
+                modified DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                PRIMARY KEY (id)
+            ) $charset_collate;";
+
+            require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+            dbDelta( $sql );
+
+        }
+
+
     }
 }
 

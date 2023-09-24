@@ -6,6 +6,29 @@
 // Mixins
 @import 'configs/mixin';
 
+.fkwmembership-admin-userprofile {
+    background: var(--fkwmembership--color--default-white-off);
+    border: var(--fkwmembership--border-size) var(--fkwmembership--border-type) var(--fkwmembership--border-color);
+    border-radius: var(--fkwmembership--border-radius);
+    display: block;
+    margin: 3rem 0;
+}
+
+.fkwmembership_exclusive_content_levels_checkbox {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    display: block;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+
+    &:checked {
+        background-color: #bbb;
+        color: #fff;
+    }
+}
+
+
 .fkwmembership-form-fields {
     padding: var(--fkwmembership--padding-topbottom-size) var(--fkwmembership--padding-rightleft);
 
@@ -17,14 +40,20 @@
         position: fixed;
         top: 0;
         width: 100%;
-        z-index: 1;
+        z-index: 99999;
+
+        &.show {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+        }
     }
 
     .modal-content {
         background-color: var(--fkwmembership--color--default-white);
         border: 1px solid var(--fkwmembership--color--default-gray);
         margin: 15% auto;
-        max-width: 500px;
+        max-width: 600px;
         padding: 20px;
         position: relative;
         width: 80%;
@@ -33,7 +62,7 @@
     .close {
         cursor: pointer;
         font-size: 20px;
-        font-weight: bold;
+        font-weight: 700;
         position: absolute;
         right: 10px;
         top: 10px;
@@ -60,6 +89,15 @@
                 padding: 0 0 12px;
             }
 
+            .delete-fields-group,
+            .modify-fields-group {
+                display: none;
+
+                &.show {
+                    display: block;
+                }
+            }
+
             .fields-group {
                 border-bottom: 1px solid var(--fkwmembership--color--default-gray);
                 margin: 0 0 20px;
@@ -67,6 +105,12 @@
 
                 &:last-child {
                     border: 0;
+                }
+
+                .interval-wrapper {
+                    align-items: center;
+                    display: flex;
+                    justify-content: space-around;
                 }
             }
         }

@@ -5,11 +5,6 @@ use FKW\Membership\FKWMembership;
 
 use FKW\Membership\Admin\SettingsPage;
 
-use FKW\Membership\Admin\Levels;
-use FKW\Membership\Admin\Points;
-use FKW\Membership\Admin\WooCommerce;
-use FKW\Membership\Admin\Discord;
-
 class Admin {
 
 	/**
@@ -85,7 +80,7 @@ class Admin {
 
 	}
 
-    public function init() {
+    public function admin_init() {
 
 		// enqueues the styles and scripts for the admin area specificially
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_styles' ] );
@@ -97,8 +92,12 @@ class Admin {
 		// creates a settings page area
 		add_action( 'admin_menu', [ $this, 'add_top_level_menu' ] );
 
-        $admin_levels = new Levels();
-		$admin_levels->init();
+
+        $admin_levels = new Admin\Levels();
+		$admin_levels->admin_init();
+
+		$admin_members = new Admin\Member();
+		$admin_members->admin_init();
 
         $options = get_option( $this->settings_database_id );
 
@@ -111,22 +110,73 @@ class Admin {
                 $discord = !empty( $system['member_discord_integration'] ) ? (int)$system['member_discord_integration'] : 0;
 
                 if ( $points === 1 ) {
-                    $admin_points = new Points();
-					$admin_points->init();
+                    $admin_points = new Admin\Points();
+					$admin_points->admin_init();
                 }
 
                 if ( $woocommerce === 1 ) {
-                    new WooCommerce();
+                    $admin_woocommerce = new Admin\WooCommerce();
+					$admin_woocommerce->admin_init();
                 }
 
                 if ( $discord === 1 ) {
-                    new Discord();
+                    new Admin\Discord();
                 }
 
             }
 
+			if( !empty( $access = $options['access_settings'] ) ) {
+
+				// allows custom fields to be added to posts
+				$post_types = get_post_types( [ 'public' => true ], 'names' );
+				add_theme_support( 'custom-fields', [ 'post', 'page', 'product' ] );
+
+				$exclusive_content = !empty( $access['exclusive_content'] ) ? (int)$access['exclusive_content'] : 0;
+
+				if( $exclusive_content === 1 ) {
+					$exclusive_content = Admin\Access\ExclusiveContent::get_instance();
+
+					$exclusive_content->admin_init();
+				}
+
+			}
+
         }
 
+	}
+
+	public function get_all_system_features() {
+
+		$options = get_option( $this->settings_database_id );
+
+        if( !empty( $options ) && is_array( $options ) ) {
+
+            if( !empty( $system = $options['system_features'] ) ) {
+
+				return $system;
+
+			}
+
+		}
+
+		return false;
+	}
+
+	public function get_all_access_settings() {
+
+		$options = get_option( $this->settings_database_id );
+
+        if( !empty( $options ) && is_array( $options ) ) {
+
+            if( !empty( $access = $options['access_settings'] ) ) {
+
+				return $access;
+
+			}
+
+		}
+
+		return false;
 	}
 
     /**
@@ -136,7 +186,7 @@ class Admin {
      */
     public function enqueue_admin_styles() {
         // Enqueue the admin CSS stylesheet
-        wp_enqueue_style( FKWMEMBERSHIP_NAMESPACE . '-admin-style', FKWMEMBERSHIP_PLUGIN_BASEURL . 'assets/dist/css/admin.css' );
+        wp_enqueue_style( FKWMEMBERSHIP_NAMESPACE . '-admin-style', FKWMEMBERSHIP_PLUGIN_BASEURL . 'assets/dist/css/admin.css', NULL, NULL );
     }
 
     /**

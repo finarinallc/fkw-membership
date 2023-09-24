@@ -4,7 +4,6 @@ namespace FKW\Membership\Admin;
 use FKW\Membership\FKWMembership;
 use FKW\Membership\Admin;
 use FKW\Membership\Admin\Levels;
-use FKW\Membership\Admin\SettingsPage;
 
 class Points {
 
@@ -83,11 +82,23 @@ class Points {
     }
 
     /**
+     * Retrieves all point intervals from the database.
+     *
+     * @return array An array of all levels.
+     */
+    public function get_all_points_intervals() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . $this->module_settings_database_id;
+
+        return $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
+    }
+
+    /**
      * Initializes the admin page functionality.
      *
      * @return void
      */
-    public function init() {
+    public function admin_init() {
         // Hook into WordPress admin menu to add the custom top-level menu link.
         add_action( 'admin_menu', [ $this, 'add_subpage_menu' ] );
     }
@@ -124,6 +135,7 @@ class Points {
 
         global $wpdb;
         $levels_table_name = $wpdb->prefix . $this->levels_settings_database_id;
+        $points_logs_table_name = $wpdb->prefix . $this->module_settings_database_id . '_logs';
 
         // Code to handle form submissions for adding/editing/deleting levels
         $points = $this->check_current_form_submission( $_POST );
@@ -138,7 +150,27 @@ class Points {
             ?>
             <p>There are no levels set. Please go back to the Levels page and create a level or two before you can assign point intervals to levels.</p>
         <?php } else {
-                require_once FKWMEMBERSHIP_PLUGIN_BASENAME . 'partials/admin/settings-points-page.php';
+            $points_users_sql = "
+                SELECT
+                    u.ID AS user_id,
+                    u.user_login AS user_name,
+                    l.level_name AS level_name,
+                    IFNULL(pm2.meta_value, 0) AS total_points
+                FROM {$wpdb->users} u
+                LEFT JOIN {$wpdb->usermeta} pm1 ON u.ID = pm1.user_id
+                    AND pm1.meta_key = 'fkwmembership_level_assignment'
+                LEFT JOIN {$levels_table_name} l ON pm1.meta_value = l.id
+                LEFT JOIN {$wpdb->usermeta} pm2 ON u.ID = pm2.user_id
+                    AND pm2.meta_key = 'fkwmembership_points_total'
+                GROUP BY u.ID
+                ORDER BY u.user_login
+            ";
+
+            $points_users = $wpdb->get_results( $points_users_sql, ARRAY_A );
+
+            $points_logs_table = new Admin\PointsLogs();
+
+            require_once FKWMEMBERSHIP_PLUGIN_BASENAME . 'partials/admin/settings-points-page.php';
         }
     }
 
@@ -179,9 +211,45 @@ class Points {
         $points_table_name = $wpdb->prefix . $this->module_settings_database_id;
         $levels_table_name = $wpdb->prefix . $this->levels_settings_database_id;
 
+        $fkwmembership_member = Admin\Member::get_instance();
+        $fkwmembership_pointslogs = Admin\PointsLogs::get_instance();
+
         if( !empty( $post_data ) ) {
 
             $action = $post_data['action'];
+
+            if( $action === 'modify_points_users' ) {
+
+                $points_user_id = filter_var( $post_data['points_user_id'], FILTER_VALIDATE_INT );
+                $new_points_quantity = filter_var( $post_data['new_points_quantity'], FILTER_VALIDATE_FLOAT );
+
+                if( !empty( $points_user_id && !empty( $new_points_quantity ) ) ) {
+
+                    // set the point action based on the point difference
+                    $current_points = $fkwmembership_member->get_points_total( $points_user_id );
+
+                    if( $current_points < $new_points_quantity ) {
+                        $point_action = 'Removed';
+                    } else if ( $current_points > $new_points_quantity ) {
+                        $point_action = 'Added';
+                    } else {
+                        $point_action = 'No Change';
+                    }
+
+                    // grab the current user ID to show whos making this change
+                    $point_action_by = get_current_user_id();
+
+                    // update the points
+                    $fkwmembership_member->set_points_total( $points_user_id, $new_points_quantity );
+
+                    // log the point change
+                    $fkwmembership_pointslogs->add_new_log( $points_user_id, $point_action, $new_points_quantity, $point_action_by );
+
+                    $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' quantity modified successfully.' ];
+
+                }
+
+            }
 
             if ( $action === 'add_points_interval' ) {
 
@@ -203,7 +271,9 @@ class Points {
                 );
 
                 $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' added successfully.' ];
-            } else {
+            }
+
+            if( $action === 'edit_points_interval' || $action === 'delete_points_interval' ) {
                 $points_id = $post_data['points_id'];
 
                 // Retrieve the existing points data from the database

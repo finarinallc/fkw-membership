@@ -20,6 +20,7 @@
 							<div class="fields-group">
 								<label for="level_access">Level Access:</label>
 								<select name="level_access[]" id="level_access" class="form-control" multiple>
+									<option value="no_access">No Access</option>
 									<?php foreach( $access_options as $key => $value ) {
 										if( !empty( $value ) && $value == 1 ) { ?>
 									<option value="<?php echo $key; ?>">
@@ -27,6 +28,11 @@
 									</option>
 									<?php }
 									} ?>
+								</select>
+								<label for="level_free">Will this level be free to subscribe to?:</label>
+								<select name="level_free[]" id="level_free" class="form-control">
+									<option value="0">No</option>
+									<option value="1">Yes</option>
 								</select>
 							</div>
 							<div class="fields-group">
@@ -53,6 +59,7 @@
 		<tr>
 			<th>Level Name</th>
 			<th>Level Access</th>
+			<th>Free?</th>
 			<th>Created</th>
 			<th>Modified</th>
 			<th>Actions</th>
@@ -79,6 +86,7 @@
 					echo implode(', ', $levels_access_options);
 					?>
 				</td>
+				<td><?php echo $level['free'] === 1 ? '<span style="color: green; font-size: 20px; font-wieght: bold;">&#9679;</span> ': '<span style="color: red; font-size: 20px;">&#10006;</span>'; ?></td>
 				<td><?php echo $level['created']; ?></td>
 				<td><?php echo $level['modified']; ?></td>
 				<td>
@@ -149,6 +157,7 @@
 		levelForm.querySelector('#existing_name').value = '';
 		levelForm.querySelector('#level_name').value = '';
 		levelForm.querySelector('#level_access').value = [];
+		levelForm.querySelector('#level_access').value = [0];
 	});
 
 	// edit level button logic
@@ -166,6 +175,7 @@
 			levelForm.querySelector('#level_id').value = String(levelData.id);
 			levelForm.querySelector('#level_name').value = levelData.level_name;
 			levelForm.querySelector('#existing_name').value = levelData.level_name;
+			levelForm.querySelector('#level_free').value = levelData.free;
 
 			var levelAccessSelect = levelForm.querySelector('#level_access');
 

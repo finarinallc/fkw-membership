@@ -1,18 +1,11 @@
 <?php
 namespace FKW\Membership\Admin;
 
+use FKW\Membership\Base;
 use FKW\Membership\FKWMembership;
 use FKW\Membership\Admin;
-use FKW\Membership\Admin\SettingsPage;
 
-class Levels {
-
-    /**
-     * The single instance of the class.
-     *
-     * @var Levels|null
-     */
-    private static $instance = null;
+class Levels extends Base {
 
     /**
      * FKWMembership Admin settings id
@@ -44,19 +37,6 @@ class Levels {
 	 */
 	public $module_settings_subpage;
 
-    /**
-     * Get the single instance of the class.
-     *
-     * @return Levels|null
-     */
-    public static function get_instance() {
-        if ( null === self::$instance ) {
-            self::$instance = new self();
-        }
-
-        return self::$instance;
-    }
-
 	/**
 	 * Constructor for the class.
 	 *
@@ -79,11 +59,50 @@ class Levels {
     }
 
     /**
+     * Retrieves one level from the database.
+     *
+     * @return array An array of all levels.
+     */
+    public function get_level( $level_id ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . $this->module_settings_database_id;
+
+        return $wpdb->get_row(
+            $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $level_id ),
+            ARRAY_A
+        );;
+    }
+
+    /**
+     * Retrieves all levels from the database.
+     *
+     * @return array An array of all levels.
+     */
+    public function get_all_levels() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . $this->module_settings_database_id;
+
+        return $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
+    }
+
+    public function is_level_free( $level_id ) {
+        if( !empty( $level_id ) ) {
+            // retrieve the level based on the level_id passed
+            $level = $this->get_level( $level_id );
+
+            // returns true if 1, otherwise false
+            return $level['free'] === 1;
+        }
+
+        return false;
+    }
+
+    /**
      * Initializes the admin page functionality.
      *
      * @return void
      */
-    public function init() {
+    public function admin_init() {
         // Hook into WordPress admin menu to add the custom top-level menu link.
         add_action( 'admin_menu', [ $this, 'add_subpage_menu' ] );
     }
@@ -180,59 +199,73 @@ class Levels {
             $action = $post_data['action'];
             $action_formatted = strtolower( $this->module_name );
 
-            if ( $action === 'add_' . $action_formatted ) {
+            $level_name = sanitize_text_field( $post_data['level_name'] );
 
-                $post_data['created'] = current_time( 'mysql' );
-
-                // Insert the new level data into the database
-                $wpdb->insert(
-                    $table_name,
-                    [
-                        'level_name' => $post_data['level_name'],
-                        'level_access' => serialize( $post_data['level_access'] ),
-                        'created' => $post_data['created'],
-                        'modified' => $post_data['created'], // Initial modification time is the same as creation time
-                    ],
-                    [ '%s', '%s', '%s', '%s' ]
-                );
-
-                $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' added successfully.' ];
+            if( !empty( $post_data['level_access'] ) && is_array( $post_data['level_access'] ) ) {
+                $level_access = serialize( $post_data['level_access'] );
             } else {
-                $level_id = $post_data['level_id'];
+                $level_access = '';
+            }
 
-                // Retrieve the existing level data from the database
-                $existing_level = $wpdb->get_row(
-                    $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $level_id ),
-                    ARRAY_A
-                );
+            $created = current_time( 'mysql' );
 
-                if ( !empty( $existing_level ) ) {
-                    if( $action === 'edit_' . $action_formatted ) {
-                        // Update the existing level data in the database
-                        $wpdb->update(
-                            $table_name,
-                            [
-                                'level_name' => $post_data['level_name'],
-                                'level_access' => serialize( $post_data['level_access'] ),
-                                'modified' => current_time( 'mysql' ),
-                            ],
-                            [ 'id' => $level_id ],
-                            [ '%s', '%s', '%s' ],
-                            [ '%d' ]
-                        );
+            if( empty( $action ) || empty( $level_name ) || empty( $level_access ) || empty( $created ) ) {
+                $this->submission_status = [ 'error', ucfirst( $this->module_name ) . ' could not be saved due to an unforeseen error. Please be sure you are filling in all required fields with valid data.' ];
+            } else {
 
-                        $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' modified successfully.' ];
-                    } elseif ( $action === 'delete_' . $action_formatted ) {
-                        // Delete the existing level data from the database
-                        $wpdb->delete(
-                            $table_name,
-                            [ 'id' => $level_id ],
-                            [ '%d' ]
-                        );
+                if ( $action === 'add_' . $action_formatted ) {
 
-                        $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' deleted successfully.' ];
+                    // Insert the new level data into the database
+                    $wpdb->insert(
+                        $table_name,
+                        [
+                            'level_name' => $level_name,
+                            'level_access' => $level_access,
+                            'created' => $created,
+                            'modified' => $created, // Initial modification time is the same as creation time
+                        ],
+                        [ '%s', '%s', '%s', '%s' ]
+                    );
+
+                    $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' added successfully.' ];
+                } else {
+                    $level_id = absint( $post_data['level_id'] );
+
+                    // Retrieve the existing level data from the database
+                    $existing_level = $wpdb->get_row(
+                        $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $level_id ),
+                        ARRAY_A
+                    );
+
+                    if ( !empty( $existing_level ) ) {
+                        if( $action === 'edit_' . $action_formatted ) {
+                            // Update the existing level data in the database
+                            $wpdb->update(
+                                $table_name,
+                                [
+                                    'level_name' => $level_name,
+                                    'level_access' => $level_access,
+                                    'modified' => $created,
+                                ],
+                                [ 'id' => $level_id ],
+                                [ '%s', '%s', '%s' ],
+                                [ '%d' ]
+                            );
+
+                            $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' modified successfully.' ];
+                        } elseif ( $action === 'delete_' . $action_formatted ) {
+                            // Delete the existing level data from the database
+                            $wpdb->delete(
+                                $table_name,
+                                [ 'id' => $level_id ],
+                                [ '%d' ]
+                            );
+
+                            $this->submission_status = [ 'updated', ucfirst( $this->module_name ) . ' deleted successfully.' ];
+                        }
                     }
                 }
+
             }
 
             if( empty( $this->submission_status ) ) {

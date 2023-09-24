@@ -53,7 +53,7 @@ $break-xlarge: 1200px;
 	--fkwmembership--button-text-color-hover: var(--fkwmembership--color--default-blue);
 	// blockquote
 	--fkwmembership--blockquote-border-color: var(--fkwmembership--color--default-blue);
-	--fkwmembership--blockquote-text-color: var(--fkwmembership--color--gray);
+	--fkwmembership--blockquote-text-color: var(--fkwmembership--color--default-gray);
 	// default font families
 	--fkwmembership--body-font: Tahoma, sans-serif;
 	--fkwmembership--heading-font: Georgia, serif;
@@ -81,6 +81,6 @@ $break-xlarge: 1200px;
 	// default borders
 	--fkwmembership--border-size: 3px;
 	--fkwmembership--border-radius: 3px;
-	--fkwmembership--border-color: var(--fkwmembership--color--default-blue);
+	--fkwmembership--border-color: var(--fkwmembership--color--default-gray);
 	--fkwmembership--border-type: solid;
 }
